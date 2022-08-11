@@ -3,7 +3,7 @@ import curses
 import time
 
 
-async def blink(canvas, row, column, symbol='*'):  # type: ignore
+async def blink(canvas, row, column, symbol="*"):  # type: ignore
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
         await asyncio.sleep(0)
@@ -22,14 +22,17 @@ def draw(canvas):  # type: ignore
     row, column = (5, 20)
     canvas.border()
     curses.curs_set(False)
-    coroutine_blink = blink(canvas, row, column)  # type: ignore
+    coroutines = [blink(canvas, row, column, symbol="* "*5)]  # type: ignore
     while True:
-        try:
-            coroutine_blink.send(None)
-            canvas.refresh()
-            time.sleep(1)
-        except StopIteration:
-            break
+        for coroutine in coroutines.copy():
+            try:
+                coroutine.send(None)
+                canvas.refresh()
+                time.sleep(1)
+            except StopIteration:
+                coroutines.remove(coroutine)
+            if len(coroutines) == 0:
+                break
 
 
 if __name__ == '__main__':
