@@ -1,24 +1,37 @@
 import asyncio
 import curses
 import time
+from collections import namedtuple
+from math import ceil
+
+from settings import Settings
+
+
+async def do_ticking(amount_of_ticks):   # type: ignore
+    for _ in range(ceil(amount_of_ticks)):
+        await asyncio.sleep(0)
 
 
 async def blink(canvas, row, column, symbol="*"):  # type: ignore
+    StarFrame = namedtuple("StarFrame", "delay style")
+    dim_star_frame = StarFrame(delay=2, style=curses.A_DIM)
+    bold_star_frame = StarFrame(delay=0.3, style=curses.A_BOLD)
+    default_star_frame = StarFrame(delay=0.3, style=0)
+    frames = (
+        dim_star_frame,
+        default_star_frame,
+        bold_star_frame,
+        default_star_frame,
+    )
     while True:
-        canvas.addstr(row, column, symbol, curses.A_DIM)
-        await asyncio.sleep(0)
-
-        canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
-
-        canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await asyncio.sleep(0)
-
-        canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
+        for delay_frame, style_frame in frames:
+            canvas.addstr(row, column, symbol, style_frame)
+            await do_ticking(amount_of_ticks=delay_frame)   # type: ignore
+            await asyncio.sleep(0)
 
 
 def draw(canvas):  # type: ignore
+    settings = Settings()
     row, column = (5, 20)
     canvas.border()
     curses.curs_set(False)
@@ -28,7 +41,7 @@ def draw(canvas):  # type: ignore
             try:
                 coroutine.send(None)
                 canvas.refresh()
-                time.sleep(1)
+                time.sleep(settings.TIC_TIMEOUT)
             except StopIteration:
                 coroutines.remove(coroutine)
             if len(coroutines) == 0:
