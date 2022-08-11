@@ -34,6 +34,8 @@ cp .env.example .env
 <details>
   <summary>Переменные окружения</summary>
   <pre>
+    SPACE_SYMBOLS=+*.:|
+    SPACE_SYMBOLS_MAX_COUNT=100
     TIC_TIMEOUT=0.1
   </pre>
 </details>

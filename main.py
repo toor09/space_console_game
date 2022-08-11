@@ -3,7 +3,7 @@ import curses
 import time
 from collections import namedtuple
 from math import ceil
-
+import random
 from settings import Settings
 
 
@@ -24,18 +24,31 @@ async def blink(canvas, row, column, symbol="*"):  # type: ignore
         default_star_frame,
     )
     while True:
+        random.sample(frames, len(frames))
         for delay_frame, style_frame in frames:
             canvas.addstr(row, column, symbol, style_frame)
             await do_ticking(amount_of_ticks=delay_frame)   # type: ignore
             await asyncio.sleep(0)
 
 
+def get_random_space_symbols(canvas, limit=100):
+    settings = Settings()
+
+    random_space_symbols = []
+    for space_symbol in range(random.randint(0, limit)):
+        max_y, max_x = curses.window.getmaxyx(canvas)
+        random_row, random_column = random.randint(5, max_y - 5), random.randint(5, max_x - 5)
+        random_space_symbols.append(
+            blink(canvas, random_row, random_column, symbol=random.choice(settings.SPACE_SYMBOLS))
+        )
+    return random_space_symbols
+
+
 def draw(canvas):  # type: ignore
     settings = Settings()
-    row, column = (5, 20)
     canvas.border()
     curses.curs_set(False)
-    coroutines = [blink(canvas, row, column, symbol="* "*5)]  # type: ignore
+    coroutines = get_random_space_symbols(canvas, settings.SPACE_SYMBOLS_MAX_COUNT)
     while True:
         for coroutine in coroutines.copy():
             try:
